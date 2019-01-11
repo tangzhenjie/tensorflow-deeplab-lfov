@@ -5,15 +5,17 @@ from six.moves import cPickle
 with open("./util/net_skeleton.ckpt", "rb") as f:
     net_skeleton = cPickle.load(f)
 
+# padding 知识点：padding=same 卷积或pool后 宽=输入宽/宽方向的stride 高=输入高/高方向的stride
+#                 padding=VALID 卷积或pool后 就是理论上的值
 # The DeepLab-LargeFOV model can be represented as follows:
-## input -> [conv-relu](dilation=1, channels=64) x 2 -> [max_pool](stride=2)
-##       -> [conv-relu](dilation=1, channels=128) x 2 -> [max_pool](stride=2)
-##       -> [conv-relu](dilation=1, channels=256) x 3 -> [max_pool](stride=2)
-##       -> [conv-relu](dilation=1, channels=512) x 3 -> [max_pool](stride=1)
-##       -> [conv-relu](dilation=2, channels=512) x 3 -> [max_pool](stride=1) -> [avg_pool](stride=1)
-##       -> [conv-relu](dilation=12, channels=1024) -> [dropout]
-##       -> [conv-relu](dilation=1, channels=1024) -> [dropout]
-##       -> [conv-relu](dilation=1, channels=21) -> [pixel-wise softmax loss].
+## input -> [conv-relu](dilation=1, channels=64) x 2 -> [max_pool](stride=2)       图像缩小一倍（因为pading= same）
+##       -> [conv-relu](dilation=1, channels=128) x 2 -> [max_pool](stride=2)       图像再缩小一倍（因为pading= same）
+##       -> [conv-relu](dilation=1, channels=256) x 3 -> [max_pool](stride=2)       图像再缩小一倍（因为pading= same）
+##       -> [conv-relu](dilation=1, channels=512) x 3 -> [max_pool](stride=1)       图像大小不变
+##       -> [conv-relu](dilation=2, channels=512) x 3 -> [max_pool](stride=1) -> [avg_pool](stride=1) 图像大小不变
+##       -> [conv-relu](dilation=12, channels=1024) -> [dropout]            图像大小不变
+##       -> [conv-relu](dilation=1, channels=1024) -> [dropout]             图像大小不变
+##       -> [conv-relu](dilation=1, channels=21) -> [pixel-wise softmax loss].  图像大小不变
 num_layers    = [2, 2, 3, 3, 3, 1, 1, 1]
 dilations     = [[1, 1],
                  [1, 1],
@@ -44,7 +46,6 @@ def create_bias_variable(name, shape):
     initialiser = tf.constant_initializer(value=0.0, dtype=tf.float32)
     variable = tf.Variable(initialiser(shape=shape), name=name)
     return variable
-
 class DeepLabLFOVModel(object):
     """DeepLab-LargeFOV model with atrous convolution and bilinear upsampling.
     
@@ -96,7 +97,7 @@ class DeepLabLFOVModel(object):
                     var.append(b)
         return var
     
-    
+    # 使输入图片大小缩小了8倍
     def _create_network(self, input_batch, keep_prob):
         """Construct DeepLab-LargeFOV network.
         
