@@ -135,8 +135,8 @@ def main():
     
     # Saver for storing checkpoints of the model.
     saver = tf.train.Saver(var_list=trainable, max_to_keep=40)
-    if args.restore_from is not None:
-        load(saver, sess, args.restore_from)
+    #if args.restore_from is not None:
+    #    load(saver, sess, args.restore_from)
     
     # Start queue threads.
     threads = tf.train.start_queue_runners(coord=coord, sess=sess)
