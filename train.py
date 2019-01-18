@@ -23,7 +23,7 @@ import numpy as np
 from deeplab_lfov import DeepLabLFOVModel, ImageReader, decode_labels
 
 BATCH_SIZE = 16
-DATA_DIRECTORY = '/home/VOCdevkit'
+DATA_DIRECTORY = '.'
 DATA_LIST_PATH = './dataset/train.txt'
 INPUT_SIZE = '321,321'
 LEARNING_RATE = 1e-4
